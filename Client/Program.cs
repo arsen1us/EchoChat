@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
- 
+using Client;
+
 namespace lab_3_2
 {
     class Program
@@ -22,33 +23,42 @@ namespace lab_3_2
                 Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 // подключаемся к удаленному хосту
                 socket.Connect(ipPoint);
-                Console.Write("Введите сообщение:");
-                string message = Console.ReadLine();
-                byte[] data = Encoding.Unicode.GetBytes(message);
-                socket.Send(data);
-
-                // получаем ответ
-                data = new byte[256]; // буфер для ответа
-                StringBuilder builder = new StringBuilder();
-                int bytes = 0; // количество полученных байт
-
-                do
+                while (true)
                 {
+                    ClientMessage clientMessage = ClientMessage.CreateMessage();
+                    var jsonMessage = clientMessage.SerializeMessage();
+                    byte[] data = Encoding.Unicode.GetBytes(jsonMessage);
+                    socket.Send(data);
+
+
+                    // получаем ответ
+                    data = new byte[256]; // буфер для ответа
+                    StringBuilder builder = new StringBuilder();
+                    int bytes = 0; // количество полученных байт
+
                     bytes = socket.Receive(data, data.Length, 0);
                     builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-                }
-                while (socket.Available > 0);
-                Console.WriteLine("ответ сервера: " + builder.ToString());
+                    Console.WriteLine(builder.ToString());
 
+                    if (socket.Available > 0)
+                    { 
+                        
+                    }
+                    //while (socket.Available > 0);
+                    //Console.WriteLine("ответ сервера: " + builder.ToString());
+                }
                 // закрываем сокет
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Close();
             }
+
+
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
             Console.Read();
         }
+        
     }
 }
